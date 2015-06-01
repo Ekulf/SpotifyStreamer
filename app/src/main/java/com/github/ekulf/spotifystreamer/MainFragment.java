@@ -66,7 +66,6 @@ public class MainFragment extends ListFragment {
                 if (totalItemsCount < mTotalCount) {
                     search(mSearchTerm, totalItemsCount);
                 }
-
             }
         });
     }
@@ -82,8 +81,7 @@ public class MainFragment extends ListFragment {
         ArtistsAdapter.ArtistViewHolder vh = (ArtistsAdapter.ArtistViewHolder) view.getTag();
         Artist artist = vh.getArtist();
 
-        // TODO: GOTO Artist Details
-        Toast.makeText(getActivity(), artist.name, Toast.LENGTH_LONG).show();
+        startActivity(TrackListActivity.createIntent(getActivity(), artist.id, artist.name));
     }
 
     @OnEditorAction(R.id.text_input)
@@ -100,7 +98,7 @@ public class MainFragment extends ListFragment {
 
     private void search(String searchText, int offset) {
         Map<String, Object> params = new HashMap<>(1);
-        params.put("offset", offset);
+        params.put(SpotifyService.OFFSET, offset);
         mSpotifyService.searchArtists(searchText, params, new Callback<ArtistsPager>() {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {

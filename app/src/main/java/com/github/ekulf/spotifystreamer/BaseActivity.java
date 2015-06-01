@@ -12,7 +12,10 @@ public class BaseActivity extends AppCompatActivity {
         super.setContentView(layoutResID);
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
+        if (mToolbar != null) {
+            setSupportActionBar(mToolbar);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
     }
 
     public Toolbar getToolbar() {
