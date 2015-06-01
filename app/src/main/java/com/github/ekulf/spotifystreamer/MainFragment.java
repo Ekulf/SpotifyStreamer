@@ -34,6 +34,7 @@ import retrofit.android.MainThreadExecutor;
 import retrofit.client.Response;
 
 public class MainFragment extends ListFragment {
+    private static final String LOG_TAG = MainFragment.class.getSimpleName();
     private SpotifyService mSpotifyService;
     private ArtistsAdapter mArtistsAdapter;
     private int mTotalCount;
@@ -103,14 +104,24 @@ public class MainFragment extends ListFragment {
         mSpotifyService.searchArtists(searchText, params, new Callback<ArtistsPager>() {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {
-                // TODO: Check for no results and display message
                 mTotalCount = artistsPager.artists.total;
-                mArtistsAdapter.addAll(artistsPager.artists.items);
+                if (mTotalCount == 0) {
+                    Toast.makeText(
+                            getActivity(),
+                            R.string.search_artist_no_results,
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    mArtistsAdapter.addAll(artistsPager.artists.items);
+                }
             }
 
             @Override
             public void failure(RetrofitError error) {
-                // TODO: Display error
+                Toast.makeText(
+                        getActivity(),
+                        R.string.error_search_artist,
+                        Toast.LENGTH_LONG).show();
+                Log.e(LOG_TAG, "Error searching for artist", error);
             }
         });
     }

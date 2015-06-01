@@ -24,6 +24,8 @@
 
     <ListView
         android:id="@android:id/list"
+        android:scrollbarStyle="outsideOverlay"
+        android:clipToPadding="false"
         android:layout_marginTop="8dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
