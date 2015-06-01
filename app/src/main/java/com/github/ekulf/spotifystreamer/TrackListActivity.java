@@ -3,6 +3,7 @@ package com.github.ekulf.spotifystreamer;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 
 public class TrackListActivity extends BaseActivity {
 
@@ -25,6 +26,10 @@ public class TrackListActivity extends BaseActivity {
         setContentView(R.layout.toolbar_activity);
         String artist = getIntent().getStringExtra(EXTRA_ARTIST_NAME);
         getToolbar().setSubtitle(artist);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         getSupportFragmentManager()
                 .beginTransaction()
