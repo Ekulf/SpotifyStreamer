@@ -17,6 +17,8 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 import butterknife.ButterKnife;
@@ -34,6 +36,8 @@ import retrofit.client.Response;
 public class MainFragment extends ListFragment {
     private SpotifyService mSpotifyService;
     private ArtistsAdapter mArtistsAdapter;
+    private int mTotalCount;
+    private String mSearchTerm;
 
     public MainFragment() {
         SpotifyApi api = new SpotifyApi(Executors.newSingleThreadExecutor(), new MainThreadExecutor());
@@ -50,6 +54,20 @@ public class MainFragment extends ListFragment {
         mArtistsAdapter = new ArtistsAdapter(getActivity());
         setListAdapter(mArtistsAdapter);
         return root;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        getListView().setOnScrollListener(new EndlessScrollListener(5) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+                if (totalItemsCount < mTotalCount) {
+                    search(mSearchTerm, totalItemsCount);
+                }
+
+            }
+        });
     }
 
     @Override
@@ -70,20 +88,23 @@ public class MainFragment extends ListFragment {
     @OnEditorAction(R.id.text_input)
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-            search(v.getText().toString());
+            mArtistsAdapter.clear();
+            mSearchTerm = v.getText().toString();
+            search(mSearchTerm, 0);
         }
 
         // Return false so the keyboard will automatically close.
         return false;
     }
 
-    private void search(String searchText) {
-        mArtistsAdapter.clear();
-        mSpotifyService.searchArtists(searchText, new Callback<ArtistsPager>() {
+    private void search(String searchText, int offset) {
+        Map<String, Object> params = new HashMap<>(1);
+        params.put("offset", offset);
+        mSpotifyService.searchArtists(searchText, params, new Callback<ArtistsPager>() {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {
-                // TODO: Implement paging
                 // TODO: Check for no results and display message
+                mTotalCount = artistsPager.artists.total;
                 mArtistsAdapter.addAll(artistsPager.artists.items);
             }
 
