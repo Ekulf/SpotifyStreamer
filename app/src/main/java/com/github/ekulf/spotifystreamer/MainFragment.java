@@ -3,22 +3,28 @@ package com.github.ekulf.spotifystreamer;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.concurrent.Executors;
 
 import butterknife.ButterKnife;
+import butterknife.InjectView;
 import butterknife.OnEditorAction;
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
-import kaaes.spotify.webapi.android.models.Artists;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 import retrofit.Callback;
 import retrofit.RetrofitError;
@@ -52,6 +58,15 @@ public class MainFragment extends ListFragment {
         ButterKnife.reset(this);
     }
 
+    @Override
+    public void onListItemClick(ListView listView, View view, int position, long id) {
+        ArtistsAdapter.ArtistViewHolder vh = (ArtistsAdapter.ArtistViewHolder) view.getTag();
+        Artist artist = vh.getArtist();
+
+        // TODO: GOTO Artist Details
+        Toast.makeText(getActivity(), artist.name, Toast.LENGTH_LONG).show();
+    }
+
     @OnEditorAction(R.id.text_input)
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -68,22 +83,22 @@ public class MainFragment extends ListFragment {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {
                 // TODO: Implement paging
+                // TODO: Check for no results and display message
                 mArtistsAdapter.addAll(artistsPager.artists.items);
             }
 
             @Override
             public void failure(RetrofitError error) {
-
+                // TODO: Display error
             }
         });
     }
 
-    private static class ArtistsAdapter extends ArrayAdapter<Artist> {
+    static class ArtistsAdapter extends ArrayAdapter<Artist> {
         private final LayoutInflater mLayoutInflater;
 
         public ArtistsAdapter(Context context) {
-            // TODO: Create custom layout for artist items
-            super(context, android.R.layout.simple_list_item_1);
+            super(context, R.layout.list_item_artist);
             mLayoutInflater = LayoutInflater.from(context);
         }
 
@@ -91,12 +106,50 @@ public class MainFragment extends ListFragment {
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
                 convertView =
-                        mLayoutInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+                        mLayoutInflater.inflate(R.layout.list_item_artist, parent, false);
             }
 
-            ((TextView) convertView).setText(getItem(position).name);
+            ArtistViewHolder viewHolder = (ArtistViewHolder) convertView.getTag();
+            if (viewHolder == null) {
+                viewHolder = new ArtistViewHolder(convertView);
+            }
 
+            viewHolder.setArtist(getItem(position));
             return convertView;
+        }
+
+        static class ArtistViewHolder {
+            @InjectView(R.id.artist_image)
+            ImageView mArtistImage;
+            @InjectView(R.id.artist_name)
+            TextView mArtistName;
+
+            private Artist mArtist;
+
+            ArtistViewHolder(View view) {
+                ButterKnife.inject(this, view);
+                view.setTag(this);
+            }
+
+            public void setArtist(Artist artist) {
+                mArtist = artist;
+                mArtistName.setText(artist.name);
+                if (artist.images != null && !artist.images.isEmpty()) {
+                    // TODO: should make choosing the image more robust
+                    Picasso
+                            .with(mArtistImage.getContext())
+                            .load(artist.images.get(artist.images.size() - 1).url)
+                            .resizeDimen(R.dimen.artist_image_width, R.dimen.artist_image_height)
+                            .centerInside()
+                            .into(mArtistImage);
+                } else {
+                    mArtistImage.setImageDrawable(null);
+                }
+            }
+
+            public Artist getArtist() {
+                return mArtist;
+            }
         }
     }
 }
