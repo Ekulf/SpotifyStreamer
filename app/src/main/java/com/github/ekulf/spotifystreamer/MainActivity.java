@@ -12,7 +12,7 @@ public class MainActivity extends BaseActivity {
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.container, new MainFragment())
+                    .add(R.id.container, new ArtistListFragment())
                     .commit();
         }
     }

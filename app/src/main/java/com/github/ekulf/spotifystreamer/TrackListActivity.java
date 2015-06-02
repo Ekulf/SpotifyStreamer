@@ -5,18 +5,19 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 
+import com.github.ekulf.spotifystreamer.viewmodels.ArtistViewModel;
+
+import org.parceler.Parcels;
+
 public class TrackListActivity extends BaseActivity {
 
-    private static final String EXTRA_ARTIST_ID = "TrackListActivity:ARTIST_ID";
-    private static final String EXTRA_ARTIST_NAME = "TrackListActivity:ARTIST_NAME";
+    private static final String EXTRA_ARTIST = "TrackListActivity:ARTIST";
 
     public static Intent createIntent(
             Context context,
-            String artistId,
-            String artistName) {
+            ArtistViewModel artist) {
         Intent intent = new Intent(context, TrackListActivity.class);
-        intent.putExtra(EXTRA_ARTIST_ID, artistId);
-        intent.putExtra(EXTRA_ARTIST_NAME, artistName);
+        intent.putExtra(EXTRA_ARTIST, Parcels.wrap(artist));
         return intent;
     }
 
@@ -24,8 +25,8 @@ public class TrackListActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.toolbar_activity);
-        String artist = getIntent().getStringExtra(EXTRA_ARTIST_NAME);
-        getToolbar().setSubtitle(artist);
+        ArtistViewModel artist = Parcels.unwrap(getIntent().getParcelableExtra(EXTRA_ARTIST));
+        getToolbar().setSubtitle(artist.getArtistName());
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -36,7 +37,7 @@ public class TrackListActivity extends BaseActivity {
                     .beginTransaction()
                     .add(
                             R.id.container,
-                            TrackListFragment.newInstance(getIntent().getStringExtra(EXTRA_ARTIST_ID)))
+                            TrackListFragment.newInstance(artist.getArtistId()))
                     .commit();
         }
     }
