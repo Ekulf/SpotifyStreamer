@@ -130,6 +130,7 @@ public class ArtistListFragment extends ListFragment {
             public void success(ArtistsPager artistsPager, Response response) {
                 mTotalCount = artistsPager.artists.total;
                 if (mTotalCount == 0) {
+                    // TODO: Consider moving this to a view.
                     Toast.makeText(
                             getActivity(),
                             R.string.search_artist_no_results,
@@ -138,15 +139,7 @@ public class ArtistListFragment extends ListFragment {
                     List<ArtistViewModel> artistList =
                             new ArrayList<>(artistsPager.artists.items.size());
                     for (Artist artist : artistsPager.artists.items) {
-                        ArtistViewModel viewModel = new ArtistViewModel();
-                        viewModel.setArtistId(artist.id);
-                        viewModel.setArtistName(artist.name);
-                        if (artist.images != null && !artist.images.isEmpty()) {
-                            // TODO: should make choosing the image more robust
-                            viewModel.setArtistImageUrl(
-                                    artist.images.get(artist.images.size() - 1).url);
-                        }
-
+                        ArtistViewModel viewModel = new ArtistViewModel(artist);
                         artistList.add(viewModel);
                         mArtists.add(viewModel);
                     }

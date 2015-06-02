@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
 import com.squareup.picasso.Picasso;
@@ -35,6 +37,7 @@ import retrofit.android.MainThreadExecutor;
 import retrofit.client.Response;
 
 public class TrackListFragment extends ListFragment {
+    private static final String LOG_TAG = TrackListFragment.class.getSimpleName();
     private SpotifyService mSpotifyService;
 
     private static final String ARG_ARTIST_ID = "TrackListFragment:ARTIST_ID";
@@ -60,6 +63,7 @@ public class TrackListFragment extends ListFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        setEmptyText(getString(R.string.track_list_no_results));
         if (savedInstanceState != null) {
             mTracks = Parcels.unwrap(savedInstanceState.getParcelable(STATE_TRACKS));
             setListAdapter(new TrackAdapter(getActivity(), mTracks));
@@ -74,18 +78,7 @@ public class TrackListFragment extends ListFragment {
                         public void success(Tracks tracks, Response response) {
                             mTracks = new ArrayList<>(tracks.tracks.size());
                             for (Track track : tracks.tracks) {
-                                TrackViewModel vm = new TrackViewModel();
-                                vm.setTrackId(track.id);
-                                vm.setTrackName(track.name);
-                                vm.setAlbumName(track.album.name);
-                                vm.setPreviewUrl(track.preview_url);
-                                vm.setArtistName(track.artists.get(0).name);
-                                if (track.album.images != null && !track.album.images.isEmpty()) {
-                                    vm.setLargeImageUrl(track.album.images.get(0).url);
-                                    vm.setImageUrl(
-                                            track.album.images.get(track.album.images.size() - 1).url);
-                                }
-
+                                TrackViewModel vm = new TrackViewModel(track);
                                 mTracks.add(vm);
                             }
 
@@ -94,7 +87,11 @@ public class TrackListFragment extends ListFragment {
 
                         @Override
                         public void failure(RetrofitError error) {
-                            // TODO: Show error
+                            Toast.makeText(
+                                    getActivity(),
+                                    R.string.error_loading_tracks,
+                                    Toast.LENGTH_LONG).show();
+                            Log.e(LOG_TAG, "Error loading tracks", error);
                         }
                     });
         }
@@ -158,10 +155,10 @@ public class TrackListFragment extends ListFragment {
                 mTrackViewModel = trackViewModel;
                 mTrackName.setText(trackViewModel.getTrackName());
                 mAlbumName.setText(trackViewModel.getAlbumName());
-                if (!TextUtils.isEmpty(trackViewModel.getImageUrl())) {
+                if (!TextUtils.isEmpty(trackViewModel.getSmallImageUrl())) {
                     Picasso
                             .with(mAlbumImage.getContext())
-                            .load(trackViewModel.getImageUrl())
+                            .load(trackViewModel.getSmallImageUrl())
                             .centerInside()
                             .resizeDimen(R.dimen.artist_image_width, R.dimen.artist_image_height)
                             .into(mAlbumImage);

@@ -8,8 +8,8 @@
               android:layout_height="wrap_content">
 
     <ImageView
-        tools:background="@color/test_color"
         android:id="@+id/artist_image"
+        android:background="@android:color/darker_gray"
         android:layout_width="@dimen/artist_image_width"
         android:layout_height="@dimen/artist_image_height"/>
 
