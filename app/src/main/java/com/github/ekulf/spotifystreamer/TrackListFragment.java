@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
@@ -42,7 +43,8 @@ public class TrackListFragment extends ListFragment {
     private ArrayList<TrackViewModel> mTracks;
 
     public TrackListFragment() {
-        SpotifyApi api = new SpotifyApi(Executors.newSingleThreadExecutor(), new MainThreadExecutor());
+        SpotifyApi api =
+                new SpotifyApi(Executors.newSingleThreadExecutor(), new MainThreadExecutor());
         mSpotifyService = api.getService();
     }
 
@@ -76,7 +78,10 @@ public class TrackListFragment extends ListFragment {
                                 vm.setTrackId(track.id);
                                 vm.setTrackName(track.name);
                                 vm.setAlbumName(track.album.name);
+                                vm.setPreviewUrl(track.preview_url);
+                                vm.setArtistName(track.artists.get(0).name);
                                 if (track.album.images != null && !track.album.images.isEmpty()) {
+                                    vm.setLargeImageUrl(track.album.images.get(0).url);
                                     vm.setImageUrl(
                                             track.album.images.get(track.album.images.size() - 1).url);
                                 }
@@ -93,6 +98,12 @@ public class TrackListFragment extends ListFragment {
                         }
                     });
         }
+    }
+
+    @Override
+    public void onListItemClick(ListView listView, View view, int position, long id) {
+        TrackAdapter.TrackViewHolder viewHolder = (TrackAdapter.TrackViewHolder) view.getTag();
+        startActivity(PlayerActivity.createIntent(getActivity(), viewHolder.getTrackViewModel()));
     }
 
     @Override

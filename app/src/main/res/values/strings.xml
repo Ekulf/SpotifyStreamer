@@ -8,4 +8,5 @@
     <string name="hint_search_artist">Search artist</string>
     <string name="error_search_artist">Error searching for artist, please try again later.</string>
     <string name="search_artist_no_results">No results found, refine your search.</string>
+    <string name="title_activity_player">Spotify Streamer</string>
 </resources>

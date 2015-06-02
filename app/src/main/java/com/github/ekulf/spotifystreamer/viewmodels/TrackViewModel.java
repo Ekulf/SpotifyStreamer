@@ -5,9 +5,12 @@ import org.parceler.Parcel;
 @Parcel(Parcel.Serialization.BEAN)
 public class TrackViewModel {
     private String mTrackId;
+    private String mArtistName;
     private String mTrackName;
     private String mAlbumName;
     private String mImageUrl;
+    private String mLargeImageUrl;
+    private String mPreviewUrl;
 
     public String getTrackId() {
         return mTrackId;
@@ -15,6 +18,14 @@ public class TrackViewModel {
 
     public void setTrackId(String trackId) {
         mTrackId = trackId;
+    }
+
+    public String getArtistName() {
+        return mArtistName;
+    }
+
+    public void setArtistName(String artistName) {
+        mArtistName = artistName;
     }
 
     public String getTrackName() {
@@ -39,5 +50,21 @@ public class TrackViewModel {
 
     public void setImageUrl(String imageUrl) {
         mImageUrl = imageUrl;
+    }
+
+    public String getLargeImageUrl() {
+        return mLargeImageUrl;
+    }
+
+    public void setLargeImageUrl(String largeImageUrl) {
+        mLargeImageUrl = largeImageUrl;
+    }
+
+    public String getPreviewUrl() {
+        return mPreviewUrl;
+    }
+
+    public void setPreviewUrl(String previewUrl) {
+        mPreviewUrl = previewUrl;
     }
 }
