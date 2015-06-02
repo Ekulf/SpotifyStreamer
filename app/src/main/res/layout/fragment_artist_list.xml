@@ -22,12 +22,26 @@
             android:layout_height="wrap_content"/>
     </android.support.design.widget.TextInputLayout>
 
-    <ListView
-        android:id="@android:id/list"
-        android:scrollbarStyle="outsideOverlay"
-        android:clipToPadding="false"
-        android:layout_marginTop="8dp"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@android:id/list"
+            android:scrollbarStyle="outsideOverlay"
+            android:clipToPadding="false"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@android:id/empty"
+            android:visibility="gone"
+            android:text="@string/hint_search_artist"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </FrameLayout>
 
 </LinearLayout>

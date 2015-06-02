@@ -14,7 +14,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.ekulf.spotifystreamer.viewmodels.ArtistViewModel;
 import com.squareup.picasso.Picasso;
@@ -46,6 +45,9 @@ public class ArtistListFragment extends ListFragment {
     private static final String STATE_COUNT = "ArtistListFragment:COUNT";
     private static final String STATE_SEARCH = "ArtistListFragment:SEARCH";
 
+    @InjectView(android.R.id.empty)
+    TextView mEmptyView;
+
     private ArrayList<ArtistViewModel> mArtists = new ArrayList<>();
     private SpotifyService mSpotifyService;
     private ArtistsAdapter mArtistsAdapter;
@@ -61,11 +63,12 @@ public class ArtistListFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_main, container, false);
 
+        View root = inflater.inflate(R.layout.fragment_artist_list, container, false);
         ButterKnife.inject(this, root);
         mArtistsAdapter = new ArtistsAdapter(getActivity());
         setListAdapter(mArtistsAdapter);
+        mEmptyView.setVisibility(View.GONE);
         if (savedInstanceState != null) {
             mArtists = Parcels.unwrap(savedInstanceState.getParcelable(STATE_ARTIST_LIST));
             mArtistsAdapter.addAll(mArtists);
@@ -115,6 +118,7 @@ public class ArtistListFragment extends ListFragment {
             mArtistsAdapter.clear();
             mArtists.clear();
             mSearchTerm = v.getText().toString();
+            mTotalCount = 0;
             search(mSearchTerm, 0);
         }
 
@@ -128,32 +132,25 @@ public class ArtistListFragment extends ListFragment {
         mSpotifyService.searchArtists(searchText, params, new Callback<ArtistsPager>() {
             @Override
             public void success(ArtistsPager artistsPager, Response response) {
-                mTotalCount = artistsPager.artists.total;
-                if (mTotalCount == 0) {
-                    // TODO: Consider moving this to a view.
-                    Toast.makeText(
-                            getActivity(),
-                            R.string.search_artist_no_results,
-                            Toast.LENGTH_LONG).show();
-                } else {
-                    List<ArtistViewModel> artistList =
-                            new ArrayList<>(artistsPager.artists.items.size());
-                    for (Artist artist : artistsPager.artists.items) {
-                        ArtistViewModel viewModel = new ArtistViewModel(artist);
-                        artistList.add(viewModel);
-                        mArtists.add(viewModel);
-                    }
+                if (getActivity() == null) return;
 
-                    mArtistsAdapter.addAll(artistList);
+                mEmptyView.setText(R.string.search_artist_no_results);
+                mTotalCount = artistsPager.artists.total;
+                List<ArtistViewModel> artistList =
+                        new ArrayList<>(artistsPager.artists.items.size());
+                for (Artist artist : artistsPager.artists.items) {
+                    ArtistViewModel viewModel = new ArtistViewModel(artist);
+                    artistList.add(viewModel);
+                    mArtists.add(viewModel);
                 }
+
+                mArtistsAdapter.addAll(artistList);
             }
 
             @Override
             public void failure(RetrofitError error) {
-                Toast.makeText(
-                        getActivity(),
-                        R.string.error_search_artist,
-                        Toast.LENGTH_LONG).show();
+                if (getActivity() == null) return;
+                mEmptyView.setText(R.string.error_search_artist);
                 Log.e(LOG_TAG, "Error searching for artist", error);
             }
         });

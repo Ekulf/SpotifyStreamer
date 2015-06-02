@@ -12,7 +12,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
 import com.squareup.picasso.Picasso;
@@ -63,7 +62,6 @@ public class TrackListFragment extends ListFragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        setEmptyText(getString(R.string.track_list_no_results));
         if (savedInstanceState != null) {
             mTracks = Parcels.unwrap(savedInstanceState.getParcelable(STATE_TRACKS));
             setListAdapter(new TrackAdapter(getActivity(), mTracks));
@@ -76,6 +74,9 @@ public class TrackListFragment extends ListFragment {
                     new Callback<Tracks>() {
                         @Override
                         public void success(Tracks tracks, Response response) {
+                            if (getActivity() == null) return;
+
+                            setEmptyText(getString(R.string.track_list_no_results));
                             mTracks = new ArrayList<>(tracks.tracks.size());
                             for (Track track : tracks.tracks) {
                                 TrackViewModel vm = new TrackViewModel(track);
@@ -87,10 +88,8 @@ public class TrackListFragment extends ListFragment {
 
                         @Override
                         public void failure(RetrofitError error) {
-                            Toast.makeText(
-                                    getActivity(),
-                                    R.string.error_loading_tracks,
-                                    Toast.LENGTH_LONG).show();
+                            if (getActivity() == null) return;
+                            setEmptyText(getString(R.string.error_loading_tracks));
                             Log.e(LOG_TAG, "Error loading tracks", error);
                         }
                     });
