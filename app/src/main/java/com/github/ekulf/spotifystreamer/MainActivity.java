@@ -9,10 +9,12 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.toolbar_activity);
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.container, new MainFragment())
-                .commit();
+        if (savedInstanceState == null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.container, new MainFragment())
+                    .commit();
+        }
     }
 
 //    @Override

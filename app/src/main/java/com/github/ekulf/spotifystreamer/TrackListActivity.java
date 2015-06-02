@@ -31,11 +31,13 @@ public class TrackListActivity extends BaseActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(
-                        R.id.container,
-                        TrackListFragment.newInstance(getIntent().getStringExtra(EXTRA_ARTIST_ID)))
-                .commit();
+        if (savedInstanceState == null) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(
+                            R.id.container,
+                            TrackListFragment.newInstance(getIntent().getStringExtra(EXTRA_ARTIST_ID)))
+                    .commit();
+        }
     }
 }

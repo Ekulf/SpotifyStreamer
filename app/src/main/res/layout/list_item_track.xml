@@ -9,15 +9,28 @@
 
     <ImageView
         tools:background="@color/test_color"
-        android:id="@+id/artist_image"
+        android:id="@+id/album_image"
         android:layout_width="@dimen/artist_image_width"
         android:layout_height="@dimen/artist_image_height"/>
 
-    <TextView
-        tools:text="Coldplay"
-        android:id="@+id/artist_name"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_marginLeft="16dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            tools:text="Fix You"
+            android:id="@+id/track_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            tools:text="X &amp; Y"
+            android:id="@+id/album_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
 
 </LinearLayout>
