@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
 import com.squareup.picasso.Picasso;
@@ -90,6 +91,12 @@ public class TrackListFragment extends ListFragment {
                         public void failure(RetrofitError error) {
                             if (getActivity() == null) return;
                             setEmptyText(getString(R.string.error_loading_tracks));
+                            Toast
+                                    .makeText(
+                                            getActivity(),
+                                            R.string.error_loading_tracks,
+                                            Toast.LENGTH_SHORT)
+                                    .show();
                             Log.e(LOG_TAG, "Error loading tracks", error);
                         }
                     });

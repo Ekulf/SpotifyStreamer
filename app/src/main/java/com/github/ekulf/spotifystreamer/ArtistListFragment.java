@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.ekulf.spotifystreamer.viewmodels.ArtistViewModel;
 import com.squareup.picasso.Picasso;
@@ -151,6 +152,12 @@ public class ArtistListFragment extends ListFragment {
             public void failure(RetrofitError error) {
                 if (getActivity() == null) return;
                 mEmptyView.setText(R.string.error_search_artist);
+                Toast
+                        .makeText(
+                                getActivity(),
+                                R.string.error_search_artist,
+                                Toast.LENGTH_SHORT)
+                        .show();
                 Log.e(LOG_TAG, "Error searching for artist", error);
             }
         });
