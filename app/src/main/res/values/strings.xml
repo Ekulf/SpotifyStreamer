@@ -13,7 +13,7 @@
     <string name="title_activity_player">Spotify Streamer</string>
     <string name="title_activity_about">About</string>
     <string name="title_about_version">Build Version</string>
-    <string name="title_about_licenses">Open Source Licences</string>
-    <string name="subtitle_about_licenses">Licence details for open source software</string>
-    <string name="title_activity_licenses">Open Source Licences</string>
+    <string name="title_about_licenses">Open Source Licenses</string>
+    <string name="subtitle_about_licenses">License details for open source software</string>
+    <string name="title_activity_licenses">Open Source Licenses</string>
 </resources>
