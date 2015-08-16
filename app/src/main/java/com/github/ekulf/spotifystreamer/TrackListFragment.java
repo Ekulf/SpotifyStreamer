@@ -105,8 +105,7 @@ public class TrackListFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView listView, View view, int position, long id) {
-        TrackAdapter.TrackViewHolder viewHolder = (TrackAdapter.TrackViewHolder) view.getTag();
-        startActivity(PlayerActivity.createIntent(getActivity(), viewHolder.getTrackViewModel()));
+        startActivity(PlayerActivity.createIntent(getActivity(), mTracks, position));
     }
 
     @Override

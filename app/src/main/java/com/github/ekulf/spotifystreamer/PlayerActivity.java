@@ -9,13 +9,17 @@ import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
 
 import org.parceler.Parcels;
 
+import java.util.List;
+
 public class PlayerActivity extends BaseActivity {
 
-    private static final String EXTRA_TRACK = "PlayerActivity:TRACK";
+    private static final String EXTRA_TRACKS = "PlayerActivity:TRACKS";
+    private static final String EXTRA_START_IDX = "PlayerActivity:START_IDX";
 
-    public static Intent createIntent(Context context, TrackViewModel track) {
+    public static Intent createIntent(Context context, List<TrackViewModel> tracks, int startIdx) {
         Intent intent = new Intent(context, PlayerActivity.class);
-        intent.putExtra(EXTRA_TRACK, Parcels.wrap(track));
+        intent.putExtra(EXTRA_TRACKS, Parcels.wrap(tracks));
+        intent.putExtra(EXTRA_START_IDX, startIdx);
         return intent;
     }
 
@@ -29,14 +33,16 @@ public class PlayerActivity extends BaseActivity {
         }
 
         if (savedInstanceState == null) {
-            TrackViewModel trackViewModel =
-                    Parcels.unwrap(getIntent().getParcelableExtra(EXTRA_TRACK));
+            List<TrackViewModel> tracks =
+                    Parcels.unwrap(getIntent().getParcelableExtra(EXTRA_TRACKS));
+
+            int startIdx = getIntent().getIntExtra(EXTRA_START_IDX, 0);
 
             getSupportFragmentManager()
                     .beginTransaction()
                     .add(
                             R.id.container,
-                            PlayerFragment.newInstance(trackViewModel))
+                            PlayerFragment.newInstance(tracks, startIdx))
                     .commit();
         }
     }
