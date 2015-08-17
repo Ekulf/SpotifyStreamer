@@ -4,9 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -24,13 +22,14 @@ import com.squareup.picasso.Picasso;
 import org.parceler.Parcels;
 
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
 
-public class PlayerFragment extends DialogFragment {
+public class PlayerFragment
+        extends DialogFragment
+        implements AudioService.AudioServiceListener {
 
     private static final String ARG_TRACKS = "PlayerFragment:TRACKS";
     private static final String ARG_START_IDX = "PlayerFragment:START_IDX";
@@ -47,6 +46,10 @@ public class PlayerFragment extends DialogFragment {
     SeekBar mSeekBar;
     @InjectView(R.id.play_button)
     ImageButton mPlayButton;
+    @InjectView(R.id.prev_button)
+    ImageButton mPrevButton;
+    @InjectView(R.id.next_button)
+    ImageButton mNextButton;
 
 
     public static PlayerFragment newInstance(List<TrackViewModel> tracks, int startIdx) {
@@ -58,11 +61,8 @@ public class PlayerFragment extends DialogFragment {
         return fragment;
     }
 
-    private final MediaPlayer mMediaPlayer = new MediaPlayer();
-    private ScheduledExecutorService mScheduledExecutorService;
     private List<TrackViewModel> mTracks;
     private int mCurrentTrackIdx;
-    private Handler mHandler;
     private AudioService mAudioService;
 
     public PlayerFragment() {
@@ -76,18 +76,7 @@ public class PlayerFragment extends DialogFragment {
         View root = inflater.inflate(R.layout.fragment_player, container, false);
         ButterKnife.inject(this, root);
 
-//        mHandler = new Handler(new Handler.Callback() {
-//            @Override
-//            public boolean handleMessage(Message msg) {
-//                updateProgress();
-//                return true;
-//            }
-//        });
-//
-//        mScheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-
         mTracks = Parcels.unwrap(getArguments().getParcelable(ARG_TRACKS));
-
 
         getActivity().bindService(
                 new Intent(getActivity(), AudioService.class),
@@ -98,6 +87,8 @@ public class PlayerFragment extends DialogFragment {
         if (savedInstanceState == null) {
             mCurrentTrackIdx = getArguments().getInt(ARG_START_IDX);
             mPlayButton.setEnabled(false);
+            mNextButton.setEnabled(false);
+            mPrevButton.setEnabled(false);
             mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
             AudioService.startNewPlaylist(getActivity(), mCurrentTrackIdx, mTracks);
         }
@@ -110,7 +101,6 @@ public class PlayerFragment extends DialogFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-//        mScheduledExecutorService.shutdown();
         ButterKnife.reset(this);
     }
 
@@ -127,8 +117,11 @@ public class PlayerFragment extends DialogFragment {
     @Override
     public void onPause() {
         super.onPause();
+        if (mAudioService != null) {
+            mAudioService.setListener(null);
+        }
+
         getActivity().unbindService(mServiceConnection);
-        mAudioService = null;
     }
 
     @OnClick(R.id.play_button)
@@ -145,17 +138,6 @@ public class PlayerFragment extends DialogFragment {
                     break;
             }
         }
-
-//        mScheduledExecutorService.scheduleWithFixedDelay(
-//                new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        mHandler.sendMessage(mHandler.obtainMessage());
-//                    }
-//                },
-//                100,
-//                200,
-//                TimeUnit.MILLISECONDS);
     }
 
     @OnClick(R.id.prev_button)
@@ -172,9 +154,41 @@ public class PlayerFragment extends DialogFragment {
         }
     }
 
-    private void updateProgress() {
-        mSeekBar.setMax(mMediaPlayer.getDuration());
-        mSeekBar.setProgress(mMediaPlayer.getCurrentPosition());
+    @Override
+    public void onTimeChanged(int currentPosition) {
+        if (mSeekBar != null) {
+            mSeekBar.setProgress(currentPosition);
+        }
+    }
+
+    @Override
+    public void onStateChanged(AudioService.State state) {
+        switch (state) {
+            case Playing:
+                mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
+                mPlayButton.setEnabled(true);
+                mNextButton.setEnabled(true);
+                mPrevButton.setEnabled(true);
+                mSeekBar.setMax(mAudioService.getCurrentDuration());
+                break;
+            case Paused:
+                mPlayButton.setImageResource(android.R.drawable.ic_media_play);
+                mPlayButton.setEnabled(true);
+                mNextButton.setEnabled(true);
+                mPrevButton.setEnabled(true);
+                break;
+            default:
+                mPlayButton.setEnabled(false);
+                mNextButton.setEnabled(false);
+                mPrevButton.setEnabled(false);
+                break;
+        }
+    }
+
+    @Override
+    public void onTrackIndexChanged(int idx) {
+        mCurrentTrackIdx = idx;
+        updateTrackInfo();
     }
 
     private void updateTrackInfo() {
@@ -197,11 +211,15 @@ public class PlayerFragment extends DialogFragment {
             mPlayButton.setEnabled(true);
             AudioService.AudioBinder binder = (AudioService.AudioBinder) service;
             mAudioService = binder.getService();
+            mAudioService.setListener(PlayerFragment.this);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mAudioService = null;
+            if (mAudioService != null) {
+                mAudioService.setListener(null);
+                mAudioService = null;
+            }
         }
     };
 }

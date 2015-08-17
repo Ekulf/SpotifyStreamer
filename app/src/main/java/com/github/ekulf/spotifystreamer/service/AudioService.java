@@ -12,7 +12,9 @@ import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnPreparedListener;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.PowerManager;
 
 import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
@@ -21,6 +23,10 @@ import org.parceler.Parcels;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class AudioService
         extends Service
@@ -46,10 +52,14 @@ public class AudioService
 
 
     private MediaPlayer mPlayer;
+    private Handler mHandler;
+    private ScheduledExecutorService mScheduledExecutorService;
     private NotificationManager mNotificationManager;
     private Notification mNotification;
     private List<TrackViewModel> mTracks;
     private int mCurrentTrack;
+    private AudioServiceListener mListener;
+    private ScheduledFuture<?> mTimerFuture;
 
     public enum State {
         Retrieving, // the MediaRetriever is retrieving music
@@ -102,6 +112,21 @@ public class AudioService
     @Override
     public void onCreate() {
         super.onCreate();
+        mHandler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                updateProgress();
+                return true;
+            }
+        });
+
+        mScheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mScheduledExecutorService.shutdown();
     }
 
     @Override
@@ -123,18 +148,22 @@ public class AudioService
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        mState = State.Playing;
-        mp.start();
+        playTrack();
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+        stopTimer();
         mCurrentTrack++;
         if (mCurrentTrack < mTracks.size() - 1) {
             playCurrentTrack();
         } else {
+            mCurrentTrack = mTracks.size() - 1;
             mState = State.Stopped;
+            onStateChanged();
         }
+
+        onTrackIndexChanged();
     }
 
     @Override
@@ -144,30 +173,45 @@ public class AudioService
 
     public void playTrack() {
         mState = State.Playing;
+        onStateChanged();
         mPlayer.start();
+        startTimer();
     }
 
     public void pauseTrack() {
         mState = State.Paused;
+        onStateChanged();
         mPlayer.pause();
+        stopTimer();
+        updateProgress();
     }
 
     public void playNextTrack() {
+        stopTimer();
         mCurrentTrack++;
         if (mCurrentTrack < mTracks.size() - 1) {
             playCurrentTrack();
         } else {
             mCurrentTrack = mTracks.size() - 1;
         }
+
+        onTrackIndexChanged();
     }
 
     public void playPreviousTrack() {
+        stopTimer();
         mCurrentTrack--;
         if (mCurrentTrack > 0) {
             playCurrentTrack();
         } else {
             mCurrentTrack = 0;
         }
+
+        onTrackIndexChanged();
+    }
+
+    public void setListener(AudioServiceListener listener) {
+        mListener = listener;
     }
 
     public State getState() {
@@ -176,6 +220,10 @@ public class AudioService
 
     public int getCurrentTrackIndex() {
         return mCurrentTrack;
+    }
+
+    public int getCurrentDuration() {
+        return mPlayer.getDuration();
     }
 
     private void createMediaPlayerIfNeeded() {
@@ -198,6 +246,9 @@ public class AudioService
 
     private void playCurrentTrack() {
         mState = State.Retrieving;
+        onStateChanged();
+        stopTimer();
+
         createMediaPlayerIfNeeded();
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
@@ -210,9 +261,56 @@ public class AudioService
         mPlayer.prepareAsync();
     }
 
+    private void updateProgress() {
+        if (mListener != null) {
+            mListener.onTimeChanged(mPlayer.getCurrentPosition());
+        }
+    }
+
+    private void onStateChanged() {
+        if (mListener != null) {
+            mListener.onStateChanged(mState);
+        }
+    }
+
+    private void onTrackIndexChanged() {
+        if (mListener != null) {
+            mListener.onTrackIndexChanged(mCurrentTrack);
+        }
+    }
+
+    private void startTimer() {
+        mTimerFuture =
+                mScheduledExecutorService.scheduleWithFixedDelay(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                mHandler.sendMessage(mHandler.obtainMessage());
+                            }
+                        },
+                        0,
+                        100,
+                        TimeUnit.MILLISECONDS);
+    }
+
+    private void stopTimer() {
+        if (mTimerFuture != null) {
+            mTimerFuture.cancel(false);
+            mTimerFuture = null;
+        }
+    }
+
     public class AudioBinder extends Binder {
         public AudioService getService() {
             return AudioService.this;
         }
+    }
+
+    public interface AudioServiceListener {
+        void onTimeChanged(int currentPosition);
+
+        void onStateChanged(State state);
+
+        void onTrackIndexChanged(int idx);
     }
 }

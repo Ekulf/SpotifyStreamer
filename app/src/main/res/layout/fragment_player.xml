@@ -48,7 +48,8 @@
         android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal">
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp">
 
         <ImageButton
             android:id="@+id/prev_button"
@@ -60,7 +61,9 @@
             android:id="@+id/play_button"
             android:src="@android:drawable/ic_media_play"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"/>
 
         <ImageButton
             android:id="@+id/next_button"
