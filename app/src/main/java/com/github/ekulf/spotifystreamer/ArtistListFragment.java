@@ -1,15 +1,19 @@
 package com.github.ekulf.spotifystreamer;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -54,6 +58,12 @@ public class ArtistListFragment extends ListFragment {
     private ArtistsAdapter mArtistsAdapter;
     private int mTotalCount;
     private String mSearchTerm;
+    private int mChoiceMode;
+    private ArtistListCallback mCallback;
+
+    public interface ArtistListCallback {
+        void onItemSelected(ArtistViewModel artist);
+    }
 
     public ArtistListFragment() {
         SpotifyApi api = new SpotifyApi(Executors.newSingleThreadExecutor(), new MainThreadExecutor());
@@ -81,6 +91,20 @@ public class ArtistListFragment extends ListFragment {
     }
 
     @Override
+    public void onInflate(Activity activity, AttributeSet attrs, Bundle savedInstanceState) {
+        super.onInflate(activity, attrs, savedInstanceState);
+        TypedArray a =
+                activity.obtainStyledAttributes(
+                        attrs,
+                        R.styleable.ArtistListFragment,
+                        0,
+                        0);
+        mChoiceMode = a.getInt(R.styleable.ArtistListFragment_android_choiceMode, AbsListView.CHOICE_MODE_NONE);
+        a.recycle();
+    }
+
+
+    @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         getListView().setOnScrollListener(new EndlessScrollListener(5) {
@@ -91,6 +115,8 @@ public class ArtistListFragment extends ListFragment {
                 }
             }
         });
+
+        getListView().setChoiceMode(mChoiceMode);
     }
 
     @Override
@@ -109,8 +135,22 @@ public class ArtistListFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView listView, View view, int position, long id) {
-        ArtistsAdapter.ArtistViewHolder vh = (ArtistsAdapter.ArtistViewHolder) view.getTag();
-        startActivity(TrackListActivity.createIntent(getActivity(), vh.getArtist()));
+        if(mCallback != null) {
+            ArtistsAdapter.ArtistViewHolder vh = (ArtistsAdapter.ArtistViewHolder) view.getTag();
+            mCallback.onItemSelected(vh.getArtist());
+        }
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mCallback = (ArtistListCallback)activity;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallback = null;
     }
 
     @OnEditorAction(R.id.text_input)
@@ -121,6 +161,7 @@ public class ArtistListFragment extends ListFragment {
             mSearchTerm = v.getText().toString();
             mTotalCount = 0;
             search(mSearchTerm, 0);
+            v.clearFocus();
         }
 
         // Return false so the keyboard will automatically close.

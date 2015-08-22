@@ -4,25 +4,33 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
-public class MainActivity extends BaseActivity {
+import com.github.ekulf.spotifystreamer.viewmodels.ArtistViewModel;
+
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.Optional;
+
+public class MainActivity extends BaseActivity implements ArtistListFragment.ArtistListCallback {
+
+    @InjectView(R.id.detail_container)
+    @Optional
+    View mDetailContainer;
+
+    private boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.toolbar_activity);
+        setContentView(R.layout.activity_main);
+        ButterKnife.inject(this);
 
-        if (savedInstanceState == null) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.container, new ArtistListFragment())
-                    .commit();
-        }
+        mTwoPane = mDetailContainer != null;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -37,5 +45,20 @@ public class MainActivity extends BaseActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemSelected(ArtistViewModel artist) {
+        if (mTwoPane) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(
+                            R.id.detail_container,
+                            TrackListFragment.newInstance(artist.getArtistId()),
+                            "TrackListFragment")
+                    .commit();
+        } else {
+            startActivity(TrackListActivity.createIntent(this, artist));
+        }
     }
 }

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="test_color">#ff0080</color>
+
+    <color name="activated">#E0E0E0</color>
 </resources>
