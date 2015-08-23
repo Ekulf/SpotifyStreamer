@@ -1,11 +1,7 @@
 package com.github.ekulf.spotifystreamer;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
+import android.app.Activity;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,11 +24,11 @@ import butterknife.InjectView;
 import butterknife.OnClick;
 
 public class PlayerFragment
-        extends DialogFragment
-        implements AudioService.AudioServiceListener {
+        extends DialogFragment {
 
     private static final String ARG_TRACKS = "PlayerFragment:TRACKS";
     private static final String ARG_START_IDX = "PlayerFragment:START_IDX";
+    private static final String ARG_PLAY = "PlayerFragment:PLAY";
 
     @InjectView(R.id.artist_name)
     TextView mArtistName;
@@ -51,19 +47,23 @@ public class PlayerFragment
     @InjectView(R.id.next_button)
     ImageButton mNextButton;
 
+    private SpotifyStreamerActivity mSpotifyStreamerActivity;
 
-    public static PlayerFragment newInstance(List<TrackViewModel> tracks, int startIdx) {
+    public static PlayerFragment newInstance(
+            List<TrackViewModel> tracks,
+            int startIdx,
+            boolean play) {
         PlayerFragment fragment = new PlayerFragment();
         Bundle args = new Bundle();
         args.putParcelable(ARG_TRACKS, Parcels.wrap(tracks));
         args.putInt(ARG_START_IDX, startIdx);
+        args.putBoolean(ARG_PLAY, play);
         fragment.setArguments(args);
         return fragment;
     }
 
     private List<TrackViewModel> mTracks;
     private int mCurrentTrackIdx;
-    private AudioService mAudioService;
 
     public PlayerFragment() {
     }
@@ -78,11 +78,6 @@ public class PlayerFragment
 
         mTracks = Parcels.unwrap(getArguments().getParcelable(ARG_TRACKS));
 
-        getActivity().bindService(
-                new Intent(getActivity(), AudioService.class),
-                mServiceConnection,
-                Context.BIND_AUTO_CREATE);
-
         // Only does this the first time the fragment is loaded.
         if (savedInstanceState == null) {
             mCurrentTrackIdx = getArguments().getInt(ARG_START_IDX);
@@ -90,7 +85,19 @@ public class PlayerFragment
             mNextButton.setEnabled(false);
             mPrevButton.setEnabled(false);
             mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
-            AudioService.startNewPlaylist(getActivity(), mCurrentTrackIdx, mTracks);
+
+            if (getArguments().getBoolean(ARG_PLAY)) {
+                AudioService.startNewPlaylist(getActivity(), mCurrentTrackIdx, mTracks);
+            } else {
+                AudioService.State state;
+                if (getAudioService() != null) {
+                    state = getAudioService().getState();
+                } else {
+                    state = AudioService.State.Stopped;
+                }
+
+                onStateChanged(state);
+            }
         }
 
         updateTrackInfo();
@@ -105,35 +112,28 @@ public class PlayerFragment
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        getActivity()
-                .bindService(
-                        new Intent(getActivity(), AudioService.class),
-                        mServiceConnection,
-                        0);
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        mSpotifyStreamerActivity = (SpotifyStreamerActivity) activity;
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        if (mAudioService != null) {
-            mAudioService.setListener(null);
-        }
-
-        getActivity().unbindService(mServiceConnection);
+    public void onDetach() {
+        super.onDetach();
+        mSpotifyStreamerActivity = null;
     }
 
     @OnClick(R.id.play_button)
     void play() {
-        if (mAudioService != null) {
-            switch (mAudioService.getState()) {
+        AudioService audioService = getAudioService();
+        if (audioService != null) {
+            switch (audioService.getState()) {
                 case Paused:
-                    mAudioService.playTrack();
+                    audioService.playTrack();
                     mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
                     break;
                 case Playing:
-                    mAudioService.pauseTrack();
+                    audioService.pauseTrack();
                     mPlayButton.setImageResource(android.R.drawable.ic_media_play);
                     break;
             }
@@ -142,40 +142,65 @@ public class PlayerFragment
 
     @OnClick(R.id.prev_button)
     void prev() {
-        if (mAudioService != null) {
-            mAudioService.playPreviousTrack();
+        AudioService audioService = getAudioService();
+        if (audioService != null) {
+            audioService.playPreviousTrack();
         }
     }
 
     @OnClick(R.id.next_button)
     void next() {
-        if (mAudioService != null) {
-            mAudioService.playNextTrack();
+        AudioService audioService = getAudioService();
+        if (audioService != null) {
+            audioService.playNextTrack();
         }
     }
 
-    @Override
     public void onTimeChanged(int currentPosition) {
         if (mSeekBar != null) {
             mSeekBar.setProgress(currentPosition);
         }
     }
 
-    @Override
     public void onStateChanged(AudioService.State state) {
         switch (state) {
             case Playing:
                 mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
                 mPlayButton.setEnabled(true);
-                mNextButton.setEnabled(true);
-                mPrevButton.setEnabled(true);
-                mSeekBar.setMax(mAudioService.getCurrentDuration());
+
+                if (mCurrentTrackIdx > 0) {
+                    mPrevButton.setEnabled(true);
+                } else {
+                    mPrevButton.setEnabled(false);
+                }
+
+                if (mCurrentTrackIdx < mTracks.size() - 1) {
+                    mNextButton.setEnabled(true);
+                } else {
+                    mNextButton.setEnabled(false);
+                }
+
+                AudioService audioService = getAudioService();
+                if (audioService != null) {
+                    mSeekBar.setMax(audioService.getCurrentDuration());
+                }
+
                 break;
             case Paused:
                 mPlayButton.setImageResource(android.R.drawable.ic_media_play);
                 mPlayButton.setEnabled(true);
-                mNextButton.setEnabled(true);
-                mPrevButton.setEnabled(true);
+                if (mCurrentTrackIdx > 0) {
+                    mPrevButton.setEnabled(true);
+                } else {
+                    mPrevButton.setEnabled(false);
+                }
+
+                if (mCurrentTrackIdx < mTracks.size() - 1) {
+                    mNextButton.setEnabled(true);
+                } else {
+                    mNextButton.setEnabled(false);
+                }
+
                 break;
             default:
                 mPlayButton.setEnabled(false);
@@ -185,10 +210,17 @@ public class PlayerFragment
         }
     }
 
-    @Override
     public void onTrackIndexChanged(int idx) {
         mCurrentTrackIdx = idx;
         updateTrackInfo();
+        AudioService.State state;
+        if (getAudioService() != null) {
+            state = getAudioService().getState();
+        } else {
+            state = AudioService.State.Stopped;
+        }
+
+        onStateChanged(state);
     }
 
     private void updateTrackInfo() {
@@ -205,21 +237,11 @@ public class PlayerFragment
         mTrackName.setText(track.getTrackName());
     }
 
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mPlayButton.setEnabled(true);
-            AudioService.AudioBinder binder = (AudioService.AudioBinder) service;
-            mAudioService = binder.getService();
-            mAudioService.setListener(PlayerFragment.this);
+    private AudioService getAudioService() {
+        if (mSpotifyStreamerActivity != null) {
+            return mSpotifyStreamerActivity.getAudioService();
         }
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            if (mAudioService != null) {
-                mAudioService.setListener(null);
-                mAudioService = null;
-            }
-        }
-    };
+        return null;
+    }
 }

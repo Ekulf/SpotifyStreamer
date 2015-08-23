@@ -2,9 +2,8 @@ package com.github.ekulf.spotifystreamer;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 
-public class LicensesActivity extends BaseActivity {
+public class LicensesActivity extends SpotifyStreamerActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

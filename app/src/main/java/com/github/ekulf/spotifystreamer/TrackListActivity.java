@@ -6,10 +6,15 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 
 import com.github.ekulf.spotifystreamer.viewmodels.ArtistViewModel;
+import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
 
 import org.parceler.Parcels;
 
-public class TrackListActivity extends BaseActivity {
+import java.util.List;
+
+public class TrackListActivity
+        extends SpotifyStreamerActivity
+        implements TrackListFragment.TrackListCallback {
 
     private static final String EXTRA_ARTIST = "TrackListActivity:ARTIST";
 
@@ -40,5 +45,10 @@ public class TrackListActivity extends BaseActivity {
                             TrackListFragment.newInstance(artist.getArtistId()))
                     .commit();
         }
+    }
+
+    @Override
+    public void onTrackSelected(List<TrackViewModel> tracks, int startTrack) {
+        startActivity(PlayerActivity.createIntent(this, tracks, startTrack, true));
     }
 }

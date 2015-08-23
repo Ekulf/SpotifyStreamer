@@ -43,6 +43,10 @@ public class TrackListFragment extends ListFragment {
     private static final String ARG_ARTIST_ID = "TrackListFragment:ARTIST_ID";
     private static final String STATE_TRACKS = "TrackListFragment:TRACKS";
 
+    public interface TrackListCallback {
+        void onTrackSelected(List<TrackViewModel> tracks, int startTrack);
+    }
+
     private ArrayList<TrackViewModel> mTracks;
 
     public TrackListFragment() {
@@ -105,7 +109,7 @@ public class TrackListFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView listView, View view, int position, long id) {
-        startActivity(PlayerActivity.createIntent(getActivity(), mTracks, position));
+        ((TrackListCallback) getActivity()).onTrackSelected(mTracks, position);
     }
 
     @Override

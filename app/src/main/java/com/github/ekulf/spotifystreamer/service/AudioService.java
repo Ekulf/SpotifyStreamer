@@ -62,13 +62,10 @@ public class AudioService
     private ScheduledFuture<?> mTimerFuture;
 
     public enum State {
-        Retrieving, // the MediaRetriever is retrieving music
-        Stopped,    // media player is stopped and not prepared to play
-        Preparing,  // media player is preparing...
-        Playing,    // playback active (media player ready!). (but the media player may actually be
-        // paused in this state if we don't have audio focus. But we stay in this state
-        // so that we know we have to resume playback once we get focus back)
-        Paused      // playback paused (media player ready!)
+        Retrieving,
+        Stopped,
+        Playing,
+        Paused
     }
 
     private State mState = State.Retrieving;
@@ -157,13 +154,12 @@ public class AudioService
         mCurrentTrack++;
         if (mCurrentTrack < mTracks.size() - 1) {
             playCurrentTrack();
+            onTrackIndexChanged();
         } else {
             mCurrentTrack = mTracks.size() - 1;
             mState = State.Stopped;
             onStateChanged();
         }
-
-        onTrackIndexChanged();
     }
 
     @Override
@@ -187,27 +183,25 @@ public class AudioService
     }
 
     public void playNextTrack() {
-        stopTimer();
         mCurrentTrack++;
-        if (mCurrentTrack < mTracks.size() - 1) {
+        if (mCurrentTrack < mTracks.size()) {
+            stopTimer();
             playCurrentTrack();
+            onTrackIndexChanged();
         } else {
             mCurrentTrack = mTracks.size() - 1;
         }
-
-        onTrackIndexChanged();
     }
 
     public void playPreviousTrack() {
-        stopTimer();
         mCurrentTrack--;
-        if (mCurrentTrack > 0) {
+        if (mCurrentTrack >= 0) {
+            stopTimer();
             playCurrentTrack();
+            onTrackIndexChanged();
         } else {
             mCurrentTrack = 0;
         }
-
-        onTrackIndexChanged();
     }
 
     public void setListener(AudioServiceListener listener) {
@@ -216,6 +210,10 @@ public class AudioService
 
     public State getState() {
         return mState;
+    }
+
+    public List<TrackViewModel> getTracks() {
+        return mTracks;
     }
 
     public int getCurrentTrackIndex() {
