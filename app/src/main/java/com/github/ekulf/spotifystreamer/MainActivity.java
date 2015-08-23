@@ -1,15 +1,11 @@
 package com.github.ekulf.spotifystreamer;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.github.ekulf.spotifystreamer.service.AudioService;
 import com.github.ekulf.spotifystreamer.viewmodels.ArtistViewModel;
 import com.github.ekulf.spotifystreamer.viewmodels.TrackViewModel;
 
@@ -22,23 +18,17 @@ import butterknife.Optional;
 public class MainActivity
         extends SpotifyStreamerActivity
         implements ArtistListFragment.ArtistListCallback,
-        TrackListFragment.TrackListCallback,
-        FragmentManager.OnBackStackChangedListener {
+        TrackListFragment.TrackListCallback {
 
     @InjectView(R.id.detail_container)
     @Optional
     View mDetailContainer;
-
-    private boolean mTwoPane;
-    private PlayerFragment mPlayerFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.inject(this);
-
-        getSupportFragmentManager().addOnBackStackChangedListener(this);
 
         mTwoPane = mDetailContainer != null;
     }
@@ -78,39 +68,6 @@ public class MainActivity
 
     @Override
     public void onTrackSelected(List<TrackViewModel> tracks, int startTrack) {
-        mPlayerFragment = PlayerFragment.newInstance(tracks, startTrack, true);
-        @SuppressLint("CommitTransaction")
-        FragmentTransaction ft =
-                getSupportFragmentManager().beginTransaction().addToBackStack(null);
-        mPlayerFragment.show(ft, "PlayerFragment");
-    }
-
-    @Override
-    public void onStateChanged(AudioService.State state) {
-        super.onStateChanged(state);
-        if (mPlayerFragment != null) {
-            mPlayerFragment.onStateChanged(state);
-        }
-    }
-
-    @Override
-    public void onTrackIndexChanged(int idx) {
-        super.onTrackIndexChanged(idx);
-        if (mPlayerFragment != null) {
-            mPlayerFragment.onTrackIndexChanged(idx);
-        }
-    }
-
-    @Override
-    public void onTimeChanged(int currentPosition) {
-        super.onTimeChanged(currentPosition);
-        if (mPlayerFragment != null) {
-            mPlayerFragment.onTimeChanged(currentPosition);
-        }
-    }
-
-    @Override
-    public void onBackStackChanged() {
-        mPlayerFragment = null;
+        showPlayerDialog(tracks, startTrack, true);
     }
 }
