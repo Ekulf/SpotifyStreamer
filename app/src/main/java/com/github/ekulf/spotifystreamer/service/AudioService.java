@@ -167,6 +167,10 @@ public class AudioService
         return false;
     }
 
+    public void setPosition(int position) {
+        mPlayer.seekTo(position);
+    }
+
     public void playTrack() {
         mState = State.Playing;
         onStateChanged();

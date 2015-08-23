@@ -48,6 +48,9 @@ public class PlayerFragment
     ImageButton mNextButton;
 
     private SpotifyStreamerActivity mSpotifyStreamerActivity;
+    private List<TrackViewModel> mTracks;
+    private int mCurrentTrackIdx;
+    private boolean mScrubbing;
 
     public static PlayerFragment newInstance(
             List<TrackViewModel> tracks,
@@ -61,9 +64,6 @@ public class PlayerFragment
         fragment.setArguments(args);
         return fragment;
     }
-
-    private List<TrackViewModel> mTracks;
-    private int mCurrentTrackIdx;
 
     public PlayerFragment() {
     }
@@ -84,14 +84,18 @@ public class PlayerFragment
             mPlayButton.setEnabled(false);
             mNextButton.setEnabled(false);
             mPrevButton.setEnabled(false);
+            mSeekBar.setEnabled(false);
             mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
 
             if (getArguments().getBoolean(ARG_PLAY)) {
                 AudioService.startNewPlaylist(getActivity(), mCurrentTrackIdx, mTracks);
             } else {
+                AudioService service = getAudioService();
                 AudioService.State state;
-                if (getAudioService() != null) {
+                if (service != null) {
                     state = getAudioService().getState();
+                    mSeekBar.setMax(service.getCurrentDuration());
+                    onTimeChanged(service.getCurrentTrackIndex());
                 } else {
                     state = AudioService.State.Stopped;
                 }
@@ -99,6 +103,27 @@ public class PlayerFragment
                 onStateChanged(state);
             }
         }
+
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mScrubbing = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                AudioService audioService = getAudioService();
+                if (audioService != null) {
+                    audioService.setPosition(seekBar.getProgress());
+                }
+
+                mScrubbing = false;
+            }
+        });
 
         updateTrackInfo();
 
@@ -157,7 +182,7 @@ public class PlayerFragment
     }
 
     public void onTimeChanged(int currentPosition) {
-        if (mSeekBar != null) {
+        if (!mScrubbing && mSeekBar != null) {
             mSeekBar.setProgress(currentPosition);
         }
     }
@@ -165,6 +190,7 @@ public class PlayerFragment
     public void onStateChanged(AudioService.State state) {
         switch (state) {
             case Playing:
+                mSeekBar.setEnabled(true);
                 mPlayButton.setImageResource(android.R.drawable.ic_media_pause);
                 mPlayButton.setEnabled(true);
 
@@ -187,6 +213,7 @@ public class PlayerFragment
 
                 break;
             case Paused:
+                mSeekBar.setEnabled(true);
                 mPlayButton.setImageResource(android.R.drawable.ic_media_play);
                 mPlayButton.setEnabled(true);
                 if (mCurrentTrackIdx > 0) {
@@ -203,6 +230,7 @@ public class PlayerFragment
 
                 break;
             default:
+                mSeekBar.setEnabled(false);
                 mPlayButton.setEnabled(false);
                 mNextButton.setEnabled(false);
                 mPrevButton.setEnabled(false);
