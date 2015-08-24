@@ -18,6 +18,7 @@ import com.squareup.picasso.Picasso;
 import org.parceler.Parcels;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -46,6 +47,10 @@ public class PlayerFragment
     ImageButton mPrevButton;
     @InjectView(R.id.next_button)
     ImageButton mNextButton;
+    @InjectView(R.id.current_time)
+    TextView mCurrentTime;
+    @InjectView(R.id.duration)
+    TextView mDuration;
 
     private SpotifyStreamerActivity mSpotifyStreamerActivity;
     private List<TrackViewModel> mTracks;
@@ -93,8 +98,9 @@ public class PlayerFragment
                 AudioService service = getAudioService();
                 AudioService.State state;
                 if (service != null) {
-                    state = getAudioService().getState();
+                    state = service.getState();
                     mSeekBar.setMax(service.getCurrentDuration());
+                    mDuration.setText(convertTime(service.getCurrentDuration()));
                     onTimeChanged(service.getCurrentTrackIndex());
                 } else {
                     state = AudioService.State.Stopped;
@@ -184,6 +190,7 @@ public class PlayerFragment
     public void onTimeChanged(int currentPosition) {
         if (!mScrubbing && mSeekBar != null) {
             mSeekBar.setProgress(currentPosition);
+            mCurrentTime.setText(convertTime(currentPosition));
         }
     }
 
@@ -209,6 +216,7 @@ public class PlayerFragment
                 AudioService audioService = getAudioService();
                 if (audioService != null) {
                     mSeekBar.setMax(audioService.getCurrentDuration());
+                    mDuration.setText(convertTime(audioService.getCurrentDuration()));
                 }
 
                 break;
@@ -271,5 +279,12 @@ public class PlayerFragment
         }
 
         return null;
+    }
+
+    private static String convertTime(int millis) {
+        return String.format(
+                "%d:%02d",
+                TimeUnit.MILLISECONDS.toMinutes(millis),
+                TimeUnit.MILLISECONDS.toSeconds(millis));
     }
 }
