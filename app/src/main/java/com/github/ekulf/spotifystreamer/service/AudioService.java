@@ -1,7 +1,5 @@
 package com.github.ekulf.spotifystreamer.service;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -54,8 +52,6 @@ public class AudioService
     private MediaPlayer mPlayer;
     private Handler mHandler;
     private ScheduledExecutorService mScheduledExecutorService;
-    private NotificationManager mNotificationManager;
-    private Notification mNotification;
     private List<TrackViewModel> mTracks;
     private int mCurrentTrack;
     private AudioServiceListener mListener;
