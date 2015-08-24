@@ -18,6 +18,8 @@
 
     <LinearLayout
         android:orientation="horizontal"
+        android:divider="?android:listDivider"
+        android:showDividers="middle"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:baselineAligned="false">
@@ -26,7 +28,7 @@
             class="com.github.ekulf.spotifystreamer.ArtistListFragment"
             android:id="@+id/artist_list_fragment"
             android:choiceMode="singleChoice"
-            android:layout_width="275dp"
+            android:layout_width="@dimen/artist_list_width"
             android:layout_height="match_parent"/>
 
         <FrameLayout

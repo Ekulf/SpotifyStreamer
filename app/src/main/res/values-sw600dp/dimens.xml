@@ -5,4 +5,6 @@
 
     <dimen name="artist_list_horizontal_padding">0dp</dimen>
     <dimen name="artist_list_vertical_padding">16dp</dimen>
+
+    <dimen name="artist_list_width">325dp</dimen>
 </resources>
