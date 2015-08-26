@@ -108,6 +108,9 @@ public class PlayerFragment
 
                 onStateChanged(state);
             }
+        } else {
+            mCurrentTrackIdx = savedInstanceState.getInt(ARG_START_IDX);
+            mTracks = Parcels.unwrap(savedInstanceState.getParcelable(ARG_TRACKS));
         }
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -140,6 +143,13 @@ public class PlayerFragment
     public void onDestroyView() {
         super.onDestroyView();
         ButterKnife.reset(this);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(ARG_START_IDX, mCurrentTrackIdx);
+        outState.putParcelable(ARG_TRACKS, Parcels.wrap(mTracks));
     }
 
     @Override
