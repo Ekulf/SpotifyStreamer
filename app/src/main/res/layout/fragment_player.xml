@@ -10,16 +10,16 @@
               tools:context="com.github.ekulf.spotifystreamer.PlayerFragment">
 
     <TextView
+        style="@style/Player.ArtistName"
         tools:text="Coldplay"
         android:id="@+id/artist_name"
-        android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
     <TextView
+        style="@style/Player.AlbumName"
         tools:text="Ghost Stories"
         android:id="@+id/album_name"
-        android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
@@ -28,12 +28,13 @@
         android:id="@+id/album_image"
         android:layout_gravity="center_horizontal"
         android:layout_width="@dimen/player_image_width"
-        android:layout_height="@dimen/player_image_height"/>
+        android:layout_height="@dimen/player_image_height"
+        android:contentDescription="@null"/>
 
     <TextView
+        style="@style/Player.TrackName"
         tools:text="A Sky Full of Stars"
         android:id="@+id/track_name"
-        android:layout_gravity="center_horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
